@@ -1,0 +1,216 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'commons-codec', name: 'commons-codec', version: '1.2'
+    }
+}
+
+plugins {
+    id 'idea'
+    id "io.spring.dependency-management" version "1.0.10.RELEASE"
+    id 'com.github.johnrengelman.shadow' version '6.1.0' apply false
+}
+
+import org.apache.commons.codec.binary.Base64
+
+description ="""
+Example project for a Gradle build
+Project name: ${project.name}
+More detailed information here... """
+
+println 'At configuration phase'
+
+idea {
+    project {
+        languageLevel = 8
+    }
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+allprojects {
+    group 'ru.rtmis'
+
+    repositories {
+        mavenCentral()
+    }
+
+    apply plugin: "io.spring.dependency-management"
+    dependencyManagement {
+        dependencies {
+            imports {
+                mavenBom("org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE")
+            }
+            dependency("com.google.guava:guava:${Versions.guava}")
+            dependency("org.projectlombok:lombok:${Versions.lombok}")
+            //dependency("org.apache.commons:commons-lang3:${Versions.commons_lang3}")
+        }
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            failOnVersionConflict()
+        }
+        resolutionStrategy {
+            force("javax.servlet:servlet-api:2.4")
+            force("commons-logging:commons-logging:1.1.1")
+            force("commons-lang:commons-lang:2.5")
+            force("org.codehaus.jackson:jackson-core-asl:1.8.8")
+            force("org.codehaus.jackson:jackson-mapper-asl:1.8.3")
+            force("org.codehaus.jettison:jettison:1.1")
+        }
+    }
+
+}
+
+apply plugin: 'idea'
+
+/*task firstTask {
+    doLast {
+        println 'It is a tedious task'
+        sleep(10 * 1000)
+    }
+}*/
+
+//print versions from BOM
+task managedVersions {
+    doLast {
+        dependencyManagement.managedVersions.each {
+            println it
+        }
+    }
+}
+
+task hello {
+    doLast {
+        println 'Hello world!'
+    }
+}
+
+task upper {
+    doLast {
+        String someString = 'mY_nAmE'
+        println "Original: $someString"
+        println "Upper case: ${someString.toUpperCase()}"
+    }
+}
+
+task count {
+    doLast {
+        4.times { print "$it " }
+    }
+}
+
+task intro {
+    dependsOn hello
+    doLast {
+        println "I'm Gradle"
+    }
+}
+
+task taskX {
+    dependsOn 'taskY'
+    doLast {
+        println 'taskX'
+    }
+}
+task taskY {
+    doLast {
+        println 'taskY'
+    }
+}
+
+4.times { counter ->
+    task "task$counter" {
+        doLast {
+            println "I'm task number $counter"
+        }
+    }
+}
+
+task0.dependsOn task2, task3
+
+/*hello.doFirst {
+    println "Greetings from the $hello.name task."
+}*/
+
+task myTask {
+    ext.myProperty = "myValue"
+}
+
+task printTaskProperties {
+    doLast {
+        println myTask.myProperty
+    }
+}
+
+defaultTasks 'cleaning', 'running'
+
+task cleaning {
+    doLast {
+        println 'Default Cleaning!'
+    }
+}
+task running {
+    doLast {
+        println 'Default Running!'
+    }
+}
+task other {
+    doLast {
+        println "I'm not a default task!"
+    }
+}
+
+task distribution {
+    doLast {
+        println "We build the zip with version=$version"
+    }
+}
+task release {
+    dependsOn 'distribution'
+    doLast {
+        println 'We release now'
+    }
+}
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(":release")) {
+        version = '1.0'
+    } else {
+        version = '1.0-SNAPSHOT'
+    }
+}
+
+task encode {
+    doLast {
+        def byte[] encodedString = new Base64().encode('hello world\n'
+                .getBytes())
+        println new String(encodedString)
+    }
+}
+
+task helloAndBye {
+    group 'greeting'
+    description 'The hello task greets Gradle by saying "Hello Gradle"'
+
+    doFirst {
+        println 'Hello Gradle'
+    }
+    doLast {
+        println 'Bye bye Gradle'
+    }
+}
+
+task configured { println 'Also at the configuration phase' }
+
+task execFirstTest { doLast { println 'During the execution phase' } }
+
+task execSecondTest {
+    doFirst { println 'At first during the execution phase' }
+    doLast { println 'At last during the execution phase' }
+    println 'At configuration phase'
+}

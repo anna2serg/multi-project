@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow'
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+compileJava.options.encoding = 'UTF-8'
+
+dependencies {
+    implementation 'org.apache.commons:commons-lang3'
+}
+
+shadowJar {
+    archiveBaseName.set('greetingLib')
+    archiveVersion.set('0.1')
+    archiveClassifier.set('')
+    manifest {
+        attributes 'Main-Class': 'ru.rtmis.GreetingFormatter'
+    }
+}
+
+tasks.build.dependsOn tasks.shadowJar

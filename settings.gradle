@@ -1,0 +1,5 @@
+rootProject.name = 'multi-project'
+include 'sub-project'
+include 'lib-project'
+println 'At initialization phase'
+
